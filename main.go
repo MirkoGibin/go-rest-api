@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -21,6 +23,10 @@ type Author struct {
 	Lastname  string `json:"lastname"`
 }
 
+// Our mocked database. Collections are called "slice", which are more flexible arrays
+var booksNumber = 10
+var books []Book
+
 // remember to init the module, go init go-rest-api
 func main() {
 	// init the mux router
@@ -29,9 +35,8 @@ func main() {
 	// example of var declaration without type inference
 	//	var specificRouter mux.Router = *mux.NewRouter()
 	//specificRouter.HandleFunc("/api/books")
-
+	intializeModel()
 	// Router handlers and enpoints
-
 	router.HandleFunc("/api/books", getBooks).Methods("GET")
 	router.HandleFunc("/api/books/{id}", getBook).Methods("GET")
 	router.HandleFunc("/api/books", createBook).Methods("POST")
@@ -42,8 +47,22 @@ func main() {
 
 }
 
+func intializeModel() {
+	for i := 0; i < booksNumber; i++ {
+		var stringCounter string = strconv.Itoa(i)
+		books = append(books, Book{
+			ID:     stringCounter,
+			Isbn:   "isbn-0123456" + stringCounter,
+			Title:  "Harry Potter " + stringCounter,
+			Author: &Author{Firstname: "name", Lastname: "surname"},
+		})
+	}
+}
+
 func getBooks(w http.ResponseWriter, r *http.Request) {
 	log.Println("Getting all books...")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(books)
 }
 
 func getBook(w http.ResponseWriter, r *http.Request) {
